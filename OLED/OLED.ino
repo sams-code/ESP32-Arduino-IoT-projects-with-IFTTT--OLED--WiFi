@@ -24,7 +24,7 @@ void drawLcdInit() {
   display.setFont(ArialMT_Plain_10);   
 }
 
-void drawFontFaceDemo() {
+void drawFontText(char *text[]) {
   // clear the display
   display.clear();
     // Font Demo1
@@ -32,11 +32,36 @@ void drawFontFaceDemo() {
     display.setTextAlignment(TEXT_ALIGN_LEFT);
 
     display.setFont(ArialMT_Plain_16);
-    display.drawString(0, 0, "Thank you Jesus");
-    display.drawString(0, 13, ", Mary and Joseph");
+    for (int i=0;i<4;i++)
+    {
+      if (text[i]!= NULL) display.drawString(0, i*15, text[i]);
+    }
         
   // write the buffer to the display
   display.display();
+}
+
+void drawRectEmpty(int x1,int y1,int x2, int y2) {
+    // Draw a pixel at given position
+    //display.setPixel(i, i);
+
+    display.drawRect(x1,y1,x2,y2);
+
+    // Fill the rectangle
+    //display.fillRect(14, 14, 17, 17);
+
+    // Draw a line horizontally
+    //display.drawHorizontalLine(0, 40, 20);
+
+    // Draw a line horizontally
+    //display.drawVerticalLine(40, 0, 20);
+    display.display();
+}
+
+void drawImageDemo() {
+    // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
+    // on how to create xbm files
+    //display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
 }
 
 void setup() {
@@ -48,10 +73,12 @@ void setup() {
   Serial.println(" ");  
 
   drawLcdInit();
-  drawFontFaceDemo();
+  char *myString[] = {"www.iot-port.com","Arduino","Cool IoT Projects", "WiFi,IFTTT,OLED"};
+  drawFontText(myString);
+  //drawRectEmpty(12, 12, 20, 20);
 
   while(true){
-    if (true)
+    if (false)
     {
       Serial.print("Sleep: ");
       Serial.print(Sleeptime); 

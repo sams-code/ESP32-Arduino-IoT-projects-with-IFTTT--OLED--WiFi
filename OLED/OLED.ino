@@ -3,13 +3,19 @@
 //fonts at http://oleddisplay.squix.ch/
 
 #include "SSD1306Wire.h"
+#include "Timer.h"
 
 #define ledPin 5 
-//#define wakePin 16
+//#define wakePin 16    //used for ESP8266
 #define Sleeptime 10
+#define OLED_X_MAX  128
+#define OLED_Y_MAX  64
 
 // Initialize the OLED display using Wire library
 SSD1306Wire  display(0x3c, 4, 15);  //18=SDK  19=SCK  As per labeling on ESP32 DevKit
+Timer t;
+const int wdtTimeout = 3000;  //time in ms to trigger the watchdog
+hw_timer_t *timer = NULL;
 
 void drawLcdInit() {
   // put your setup code here, to run once:
@@ -25,9 +31,7 @@ void drawLcdInit() {
 }
 
 void drawFontText(char *text[]) {
-  // clear the display
-  display.clear();
-    // Font Demo1
+    // Font Demo
     // create more fonts at http://oleddisplay.squix.ch/
     display.setTextAlignment(TEXT_ALIGN_LEFT);
 
@@ -35,10 +39,7 @@ void drawFontText(char *text[]) {
     for (int i=0;i<4;i++)
     {
       if (text[i]!= NULL) display.drawString(0, i*15, text[i]);
-    }
-        
-  // write the buffer to the display
-  display.display();
+    }     
 }
 
 void drawRectEmpty(int x1,int y1,int x2, int y2) {
@@ -55,7 +56,6 @@ void drawRectEmpty(int x1,int y1,int x2, int y2) {
 
     // Draw a line horizontally
     //display.drawVerticalLine(40, 0, 20);
-    display.display();
 }
 
 void drawImageDemo() {
@@ -72,11 +72,27 @@ void setup() {
   Serial.println("Power up");
   Serial.println(" ");  
 
+  /* Use 1st timer of 4 */
+  /* 1 tick take 1/(80MHZ/80) = 1us so we set divider 80 and count up */
+  timer = timerBegin(0, 80, true);
+  /* Attach onTimer function to our timer */
+  timerAttachInterrupt(timer, &onTimer, true);
+  /* every second 1 tick is 1us  => 1 second is 1000000us, Repeat the alarm (third parameter) */
+  timerAlarmWrite(timer, 1000000, true);  
+  /* Start an alarm */
+  timerAlarmEnable(timer);
+  Serial.println("Timer started..");
+  
   drawLcdInit();
   char *myString[] = {"www.iot-port.com","Arduino","Cool IoT Projects", "WiFi,IFTTT,OLED"};
-  drawFontText(myString);
-  //drawRectEmpty(12, 12, 20, 20);
 
+  display.clear();
+  
+  drawFontText(myString);
+  //drawRectEmpty(0, 0, OLED_X_MAX, OLED_Y_MAX);
+  // write the buffer to the display
+  display.display();
+  
   while(true){
     if (false)
     {

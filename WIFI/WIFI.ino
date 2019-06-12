@@ -8,9 +8,9 @@
 #define ledPin 5 
 #define wakePin 16
 #define Sleeptime 5*60
-#define ssid "PAL"
-#define password "SAJHOU123"
-#define IFTTT_API_KEY "b9LeJdavlm7YpzjpAHiBMv"
+#define ssid "xx"
+#define password "xx"
+#define IFTTT_API_KEY "xx"
 #define IFTTT_EVENT_NAME "Pushbutton"
 
 // Initialize the OLED display using Wire library

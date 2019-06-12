@@ -3,19 +3,26 @@
 //fonts at http://oleddisplay.squix.ch/
 
 #include "SSD1306Wire.h"
-#include "Timer.h"
+
+enum Light {Blink = 1, Center = 2}; 
 
 #define ledPin 5 
 //#define wakePin 16    //used for ESP8266
-#define Sleeptime 10
+#define Sleeptime 0.5
 #define OLED_X_MAX  128
 #define OLED_Y_MAX  64
 
 // Initialize the OLED display using Wire library
 SSD1306Wire  display(0x3c, 4, 15);  //18=SDK  19=SCK  As per labeling on ESP32 DevKit
-Timer t;
-const int wdtTimeout = 3000;  //time in ms to trigger the watchdog
-hw_timer_t *timer = NULL;
+
+volatile int interruptCounter;
+int totalInterruptCounter;
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+char *disp_text[4];
+byte disp_text_style[4];
+long tick_counter = 0;
 
 void drawLcdInit() {
   // put your setup code here, to run once:
@@ -26,42 +33,64 @@ void drawLcdInit() {
   Wire.begin(4, 15);
 
   display.init(); 
-  display.flipScreenVertically();
-  display.setFont(ArialMT_Plain_10);   
+  display.flipScreenVertically(); 
+
+  disp_text[0] = "Self Test";
+  disp_text[1] = "Self Test";;
+  disp_text[2] = "Self Test";
+  disp_text[3] = "Self Test";  
+
+  for (int i=0;i<4;i++)
+  {
+    disp_text_style[i] = 0;
+  }
 }
 
-void drawFontText(char *text[]) {
-    // Font Demo
-    // create more fonts at http://oleddisplay.squix.ch/
-    display.setTextAlignment(TEXT_ALIGN_LEFT);
+void drawFontTextInterrupt(void) {
 
+    display.clear();
+  
+    // Font Demo, create more fonts at http://oleddisplay.squix.ch/
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
     display.setFont(ArialMT_Plain_16);
+    
     for (int i=0;i<4;i++)
     {
-      if (text[i]!= NULL) display.drawString(0, i*15, text[i]);
-    }     
+      if (((disp_text_style[i] & Blink) == 0) || (tick_counter & 0x1))
+      {
+        if (disp_text[i]!= NULL) display.drawString(0, i*15, disp_text[i]); //line spacing: 15 pixels
+      }
+      Serial.print("disp_text_style ");  
+      Serial.println(disp_text_style[i]);  
+      Serial.print("tick_counter "); 
+      Serial.println(tick_counter); 
+    } 
+    
+    display.display();  
 }
 
 void drawRectEmpty(int x1,int y1,int x2, int y2) {
+  
+    display.drawRect(x1,y1,x2,y2);
+    
     // Draw a pixel at given position
     //display.setPixel(i, i);
-
-    display.drawRect(x1,y1,x2,y2);
-
     // Fill the rectangle
     //display.fillRect(14, 14, 17, 17);
-
     // Draw a line horizontally
     //display.drawHorizontalLine(0, 40, 20);
-
     // Draw a line horizontally
     //display.drawVerticalLine(40, 0, 20);
-}
 
-void drawImageDemo() {
     // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
     // on how to create xbm files
     //display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+}
+
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL(&timerMux);
+  //drawFontTextInterrupt();
+  portEXIT_CRITICAL(&timerMux);
 }
 
 void setup() {
@@ -84,14 +113,17 @@ void setup() {
   Serial.println("Timer started..");
   
   drawLcdInit();
-  char *myString[] = {"www.iot-port.com","Arduino","Cool IoT Projects", "WiFi,IFTTT,OLED"};
+  drawFontTextInterrupt();
 
-  display.clear();
+  disp_text[0] = "www.iot-port.com";
+  disp_text[1] = "Arduino";;
+  disp_text[2] = "Cool IoT Projects";
+  disp_text[3] = "WiFi,IFTTT,OLED";
   
-  drawFontText(myString);
+  disp_text_style[1] =  1;
+         
   //drawRectEmpty(0, 0, OLED_X_MAX, OLED_Y_MAX);
   // write the buffer to the display
-  display.display();
   
   while(true){
     if (false)
@@ -100,7 +132,7 @@ void setup() {
       Serial.print(Sleeptime); 
       Serial.println(" sec"); 
           
-      ESP.deepSleep(Sleeptime * 1e6); 
+      ESP.deepSleep(Sleeptime * 1e6);     //Put ESp to deep sleep, saves power
       Serial.println("Wakeup");  
     }
     else
@@ -112,6 +144,8 @@ void setup() {
       delay(Sleeptime * 1e3);      
       Serial.println("Startover");
     }
+    tick_counter++;
+    drawFontTextInterrupt();
   }
 }
 

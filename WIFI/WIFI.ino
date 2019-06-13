@@ -3,7 +3,6 @@
 #include <IFTTTWebhook.h>
 //#include <ESP8266WiFi.h>
 #include <WiFi.h>
-#include "SSD1306Wire.h" // legacy include: `#include "SSD1306.h"`
 
 #define ledPin 5 
 #define wakePin 16
@@ -13,50 +12,11 @@
 #define IFTTT_API_KEY "xx"
 #define IFTTT_EVENT_NAME "Pushbutton"
 
-// Initialize the OLED display using Wire library
-//SSD1306Wire  display(0x3c, 18, 19);  //18=SDK  19=SCK  As per labeling on ESP32 DevKit
-SSD1306Wire  display(0x3c, 4, 15);  //18=SDK  19=SCK  As per labeling on ESP32 DevKit
-
 WiFiClient client;
 //WiFiClientSecure client;
 bool dataAvailable = false;
 String postData;
 String value1, value2, value3 = "";
-
-void drawLcdInit() {
-  // put your setup code here, to run once:
-  pinMode(16, OUTPUT);
-  digitalWrite(16, LOW); // set GPIO16 low to reset OLED
-  delay(50);
-  digitalWrite(16, HIGH); // while OLED is running, must set GPIO16 to high
-  Wire.begin(4, 15);
-
-  display.init(); 
-  display.flipScreenVertically();
-  display.setFont(ArialMT_Plain_10);
-    
-}
-
-void drawFontFaceDemo() {
-  // clear the display
-  display.clear();
-    // Font Demo1
-    // create more fonts at http://oleddisplay.squix.ch/
-    display.setTextAlignment(TEXT_ALIGN_LEFT);
-    //display.setFont(ArialMT_Plain_10);
-    //display.drawString(0, 0, "Hello world");
-    //display.setFont(ArialMT_Plain_16);
-    //display.drawString(0, 10, "Hello world");
-    //display.setFont(ArialMT_Plain_24);
-    //display.drawString(0, 26, "Hello world");
-
-    display.setFont(ArialMT_Plain_16);
-    display.drawString(0, 0, "Thank you Jesus");
-    display.drawString(0, 13, ", Mary and Joseph");
-        
-  // write the buffer to the display
-  display.display();
-}
 
 void setup() {
   Serial.begin(115200);
@@ -66,8 +26,8 @@ void setup() {
   Serial.println("Power up");
   Serial.println(" ");  
 
-  drawLcdInit();
-  drawFontFaceDemo();
+  LcdInit();
+  //LcdLoop();
 
   //connectToWifi();
   //WiFi.persistent(false);

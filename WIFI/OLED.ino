@@ -24,7 +24,13 @@ char *disp_text[4];
 byte disp_text_style[4];
 long tick_counter = 0;
 
-void drawLcdInit() {
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL(&timerMux);
+  //drawFontTextInterrupt();
+  portEXIT_CRITICAL(&timerMux);
+}
+
+void LcdInit() {
   // put your setup code here, to run once:
   pinMode(16, OUTPUT);
   digitalWrite(16, LOW); // set GPIO16 low to reset OLED
@@ -44,9 +50,22 @@ void drawLcdInit() {
   {
     disp_text_style[i] = 0;
   }
+  
+  /* Use 1st timer of 4 */
+  /* 1 tick take 1/(80MHZ/80) = 1us so we set divider 80 and count up */
+  timer = timerBegin(0, 80, true);
+  /* Attach onTimer function to our timer */
+  timerAttachInterrupt(timer, &onTimer, true);
+  /* every second 1 tick is 1us  => 1 second is 1000000us, Repeat the alarm (third parameter) */
+  timerAlarmWrite(timer, 1000000, true);  
+  /* Start an alarm */
+  timerAlarmEnable(timer);
+  Serial.println("Timer started..");
+
+  LcdUpdate();
 }
 
-void drawFontTextInterrupt(void) {
+void LcdUpdate(void) {
 
     display.clear();
   
@@ -87,33 +106,7 @@ void drawRectEmpty(int x1,int y1,int x2, int y2) {
     //display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
 }
 
-void IRAM_ATTR onTimer() {
-  portENTER_CRITICAL(&timerMux);
-  //drawFontTextInterrupt();
-  portEXIT_CRITICAL(&timerMux);
-}
-
-void setup() {
-  Serial.begin(115200);
-  while(!Serial) { 
-  }
-  Serial.println(" ");// print an empty line before and after Button Press    
-  Serial.println("Power up");
-  Serial.println(" ");  
-
-  /* Use 1st timer of 4 */
-  /* 1 tick take 1/(80MHZ/80) = 1us so we set divider 80 and count up */
-  timer = timerBegin(0, 80, true);
-  /* Attach onTimer function to our timer */
-  timerAttachInterrupt(timer, &onTimer, true);
-  /* every second 1 tick is 1us  => 1 second is 1000000us, Repeat the alarm (third parameter) */
-  timerAlarmWrite(timer, 1000000, true);  
-  /* Start an alarm */
-  timerAlarmEnable(timer);
-  Serial.println("Timer started..");
-  
-  drawLcdInit();
-  drawFontTextInterrupt();
+void LcdLoop() {
 
   disp_text[0] = "www.iot-port.com";
   disp_text[1] = "Arduino";;
@@ -146,12 +139,6 @@ void setup() {
       Serial.println("Startover");
     }
     tick_counter++;
-    drawFontTextInterrupt();
+    LcdUpdate();
   }
-}
-
-void loop(){
-//if deep sleep is working, this code will never run.
-Serial.println("This should never get printed");
-delay(1000);
 }

@@ -79,10 +79,10 @@ void LcdUpdate(void) {
       {
         if (disp_text[i]!= NULL) display.drawString(0, i*15, disp_text[i]); //line spacing: 15 pixels
       }
-      Serial.print("disp_text_style ");  
-      Serial.println(disp_text_style[i]);  
-      Serial.print("tick_counter "); 
-      Serial.println(tick_counter); 
+      //Serial.print("disp_text_style ");  
+      //Serial.println(disp_text_style[i]);  
+      //Serial.print("tick_counter "); 
+      //Serial.println(tick_counter); 
     } 
     
     display.display();  
@@ -106,12 +106,17 @@ void drawRectEmpty(int x1,int y1,int x2, int y2) {
     //display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
 }
 
-void LcdLoop() {
+void LcDMain() {
 
   disp_text[0] = "www.iot-port.com";
   disp_text[1] = "Arduino";;
   disp_text[2] = "Cool IoT Projects";
-  disp_text[3] = "WiFi,IFTTT,OLED";
+
+  char tStr[10];
+  ltoa(tick_counter,tStr, 10);
+
+  //disp_text[3] = "WiFi,IFTTT,OLED";
+  disp_text[3] = tStr;
   
   disp_text_style[1] |=  Blink;
   disp_text_style[2] |=  Blink;
@@ -119,26 +124,6 @@ void LcdLoop() {
   //drawRectEmpty(0, 0, OLED_X_MAX, OLED_Y_MAX);
   // write the buffer to the display
   
-  while(true){
-    if (false)
-    {
-      Serial.print("Sleep: ");
-      Serial.print(Sleeptime); 
-      Serial.println(" sec"); 
-          
-      ESP.deepSleep(Sleeptime * 1e6);     //Put ESp to deep sleep, saves power
-      Serial.println("Wakeup");  
-    }
-    else
-    {
-      Serial.print("Wait for: ");
-      Serial.print(Sleeptime);
-      Serial.println(" sec");
-          
-      delay(Sleeptime * 1e3);      
-      Serial.println("Startover");
-    }
-    tick_counter++;
-    LcdUpdate();
-  }
+  tick_counter++;
+  LcdUpdate();
 }

@@ -1,15 +1,23 @@
 //Code for the www.MakeUseOf.com Wi-Fi connected Button tutorial by Ian Buckley
 
 #include <IFTTTWebhook.h>
-//#include <ESP8266WiFi.h>
-#include <WiFi.h>
+//#include <ESP8266WiFi.h>    //ESP8266
+#include <WiFi.h>             //ESP32
+//#include <WiFiClientSecure.h> //Secure
+
+#include "C:\GitHub\Cust_WIFI.h"
 
 #define ledPin 5 
 #define wakePin 16
-#define Sleeptime 5*60
-#define ssid "xx"
-#define password "xx"
-#define IFTTT_API_KEY "xx"
+
+#define WIFI_Sleeptime 10*60 //5 min
+#define OLED_Sleeptime 0.5 //10 sec
+
+#ifndef ssid 
+  #define ssid "xx"
+  #define password "xx"
+  #define IFTTT_API_KEY "xx"
+#endif
 #define IFTTT_EVENT_NAME "Pushbutton"
 
 WiFiClient client;
@@ -17,7 +25,7 @@ WiFiClient client;
 bool dataAvailable = false;
 String postData;
 String value1, value2, value3 = "";
-
+     
 void setup() {
   Serial.begin(115200);
   while(!Serial) { 
@@ -40,17 +48,18 @@ void setup() {
         pinMode(ledPin, OUTPUT);
         digitalWrite(ledPin, HIGH);       
         
-        //IFTTTWebhook hook(IFTTT_API_KEY, IFTTT_EVENT_NAME);
-        //hook.trigger();
+        IFTTTWebhook hook(IFTTT_API_KEY, IFTTT_EVENT_NAME);
+        hook.trigger();
         
         Serial.println("POST");
         if (true)
         {
-          int temp = random(300);
-          
+          //int temp = random(300);
+          int temp = 55;
+                    
           setValue(1,String(temp));
-          setValue(2,"250");
-          setValue(3,"50");
+          setValue(2,"44");
+          setValue(3,"66");
         }
         post();   
         
@@ -61,24 +70,26 @@ void setup() {
     }
     //ESP.deepSleep(wakePin); 
 
-    if (false)
-    {
-      Serial.print("Sleep: ");
-      Serial.print(Sleeptime); 
-      Serial.println(" sec"); 
-          
-      ESP.deepSleep(Sleeptime * 1e6); 
-      Serial.println("Wakeup");  
+  Serial.print("Sleep: ");
+  Serial.print(WIFI_Sleeptime); 
+  Serial.println(" sec"); 
+        
+  int lp = WIFI_Sleeptime/OLED_Sleeptime;
+  
+  while(lp>0){
+      LcDMain();
+      lp--;
+      
+      if (false)
+      {
+        ESP.deepSleep(OLED_Sleeptime * 1e6); 
+      }
+      else
+      {          
+        delay(OLED_Sleeptime * 1e3);      
+      }
     }
-    else
-    {
-      Serial.print("Wait for: ");
-      Serial.print(Sleeptime);
-      Serial.println(" sec");
-          
-      delay(Sleeptime * 1e3);      
-      Serial.println("Startover");
-    }
+    Serial.println("Startover");
   }
 }
 
@@ -91,6 +102,7 @@ bool checkconnectToWifi() {
 }
 
 bool checkconnectToIFTTT(){
+      
     if (!client.connect("maker.ifttt.com", 80)) {
     //if (!client.connect("192.168.1.100", 80)) {
       Serial.println("Server connection failed");
@@ -178,7 +190,7 @@ void compileData()
 }
 
 bool connectToWifi() {
-  Serial.print("Connecting to: "); //uncomment next line to show SSID name
+  Serial.print("Connecting to: ");
   Serial.print(ssid); 
   WiFi.begin(ssid, password);  
   Serial.println(" ");
@@ -197,7 +209,7 @@ bool connectToWifi() {
   //print connection result
   if(WiFi.status() == WL_CONNECTED){
     Serial.println("Connected."); 
-    Serial.print("NodeMCU IP Address: "); 
+    Serial.print("IP Address: "); 
     Serial.println(WiFi.localIP());
     return true; 
   }

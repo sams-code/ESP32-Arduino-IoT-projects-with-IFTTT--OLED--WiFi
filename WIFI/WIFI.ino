@@ -15,8 +15,8 @@
 
 #ifndef ssid 
   #define ssid "xx"
-  #define password "xx"
-  #define IFTTT_API_KEY "xx"
+  #define password "xxx"
+  #define IFTTT_API_KEY "xxx"
 #endif
 #define IFTTT_EVENT_NAME "Pushbutton"
 
